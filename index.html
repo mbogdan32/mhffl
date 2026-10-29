@@ -75,7 +75,9 @@ th:first-child,td:first-child{text-align:left}
 td{padding:10px 16px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 td.team{white-space:normal;font-weight:600}
 td.team .seed{display:inline-block;width:1.4em;color:var(--muted);font-weight:500;font-family:var(--f-label)}
-tr.lead td{background:var(--ds)}
+tr.po td{background:var(--ds)}
+tr.po td.team .seed{color:var(--dc);font-weight:700}
+tr.cut td{border-top:2px solid var(--dc)}
 td.rec{font-family:var(--f-display);font-weight:800;font-size:1.25rem}
 .form{display:inline-flex;gap:3px;vertical-align:middle}
 .form i{width:8px;height:8px;border-radius:2px;background:var(--line)}
@@ -175,7 +177,7 @@ footer b{color:var(--band-fg);font-family:var(--f-display);font-size:1.3rem;lett
     <section id="standings">
       <div class="sec-head"><h2>Standings</h2><span class="label" id="updated"></span></div>
       <div class="divs" id="divs"></div>
-      <p class="note">Highlighted row leads the division. Squares show results from Week 1 onward.</p>
+      <p class="note">Top 3 in each division make the playoffs. Squares show results from Week 1 onward.</p>
     </section>
 
     <section id="points">
@@ -295,7 +297,7 @@ $("divs").innerHTML = Object.entries(LEAGUE.divisions).map(([name, teams]) => {
   const rows = sorted.map((t,i) => {
     const r = rec[t];
     const gb = ((top.w - r.w) + (r.l - top.l)) / 2;
-    return `<tr class="${i===0?'lead':''}">
+    return `<tr class="${i<3?'po':i===3?'cut':''}">
       <td class="team"><span class="seed">${i+1}</span>${esc(t)}${LEAGUE.owners?.[t]?`<span class="own">${esc(LEAGUE.owners[t])}</span>`:''}</td>
       <td class="rec">${r.w}-${r.l}</td>
       <td class="num">${gb===0?'–':gb}</td>
