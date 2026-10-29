@@ -92,6 +92,7 @@ td.rec{font-family:var(--f-display);font-weight:800;font-size:1.25rem}
 .weeks button.live:not([aria-pressed="true"]){border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
 .weeks .po-btn{font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-color:var(--red);color:var(--red)}
 .weeks .po-btn[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#F5EEDC}
+.weeks button:not(.po-btn) + .po-btn{margin-left:8px}
 .game.tbd .nm{color:var(--muted);font-weight:500;letter-spacing:.04em}
 .weeks button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .slate-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 12px}
@@ -250,11 +251,11 @@ const LEAGUE = {
     { week:13, games:[["Witness GOATness","Motley Crew"],["Jeff's Team","Wack Pack"],["CubHater","UB"],["One Tua","Let's Ride"],["Jerry's Kidz","Coiffed Master"]] },
     { week:14, games:[["Witness GOATness","Jeff's Team"],["Jerry's Kidz","Motley Crew"],["Let's Ride","Coiffed Master"],["UB","One Tua"],["CubHater","Wack Pack"]] }
   ],
-  // Bonus weeks that fall outside the H2H schedule
-  // Playoff matchups: same format as weekly games. Empty = shows TBD.
-  playoffs: { games: [] },
-  extraBonus: [
-    { week:15, title:"Most TDs (Starters Only)", prize:50, winner:null }
+  // Playoffs: add games like the weekly schedule. Empty games = TBD.
+  playoffs: [
+    { week:15, round:"Round 1", short:"Rd 1", bonus:{ title:"Most TDs (Starters Only)", prize:50, winner:null }, games:[] },
+    { week:16, round:"Round 2", short:"Rd 2", games:[] },
+    { week:17, round:"Championship", short:"Final", games:[] }
   ],
   payouts: {
     entry: 200,
@@ -332,38 +333,31 @@ $("divs").innerHTML = Object.entries(LEAGUE.divisions).map(([name, teams]) => {
 })();
 
 // schedule
-function showPlayoffs(){
-  [...$("weeks").children].forEach(b => b.setAttribute("aria-pressed", b.dataset.w === "po"));
-  const g = LEAGUE.playoffs?.games || [];
-  $("slateMeta").innerHTML = `<span class="label">Playoffs</span><span class="pill up">${g.length ? 'Set' : 'TBD'}</span>`;
-  const side = (t, win, sc) => `<div class="side ${win ? (win===t?'won':'lost') : ''}"><span class="nm">${esc(t)}</span>${sc!=null?`<span class="sc">${(+sc).toFixed(1)}</span>`:''}</div>`;
-  $("games").innerHTML = g.length
-    ? g.map(([a,b,win,sa,sb]) => `<div class="game">${side(a,win,sa)}<hr>${side(b,win,sb)}</div>`).join('')
-    : [1,2,3].map(() => `<div class="game tbd">${side("TBD")}<hr>${side("TBD")}</div>`).join('');
-  $("bonus").innerHTML = g.length ? '' : `<p class="note">Playoff schedule to be announced. The top 3 in each division qualify.</p>`;
-}
 function showWeek(n){
-  if (n === "po") return showPlayoffs();
-  const wk = LEAGUE.weeks.find(w => w.week === n);
+  const po = LEAGUE.playoffs.find(p => p.week === n);
+  const wk = po || LEAGUE.weeks.find(w => w.week === n);
   [...$("weeks").children].forEach(b => b.setAttribute("aria-pressed", +b.dataset.w === n));
-  const done = wk.games.every(g => g[2]);
+  const tbd = po && !wk.games.length;
+  const done = wk.games.length && wk.games.every(g => g[2]);
   const started = wk.games.some(g => g[2]);
-  $("slateMeta").innerHTML = `<span class="label">Week ${n}</span>` +
-    (done ? `<span class="pill final">Final</span>` : started ? `<span class="pill up">In progress</span>` : `<span class="pill up">Upcoming</span>`);
+  $("slateMeta").innerHTML = `<span class="label">Week ${n}${po ? ` · Playoffs ${esc(po.round)}` : ''}</span>` +
+    (tbd ? `<span class="pill up">Matchups TBD</span>` : done ? `<span class="pill final">Final</span>` : started ? `<span class="pill up">In progress</span>` : `<span class="pill up">Upcoming</span>`);
   const side = (t, win, sc) => {
     const cls = win ? (win === t ? "won" : "lost") : "";
-    return `<div class="side ${cls}"><span class="nm">${esc(t)}</span><span class="rc">${recStr(t)}</span>${sc!=null?`<span class="sc">${(+sc).toFixed(1)}</span>`:''}</div>`;
+    return `<div class="side ${cls}"><span class="nm">${esc(t)}</span>${rec[t]?`<span class="rc">${recStr(t)}</span>`:''}${sc!=null?`<span class="sc">${(+sc).toFixed(1)}</span>`:''}</div>`;
   };
-  $("games").innerHTML = wk.games.map(([a,b,win,sa,sb]) =>
-    `<div class="game">${side(a,win,sa)}<hr>${side(b,win,sb)}</div>`).join('');
+  $("games").innerHTML = tbd
+    ? `<div class="game tbd">${side("TBD")}<hr>${side("TBD")}</div>`
+    : wk.games.map(([a,b,win,sa,sb]) => `<div class="game">${side(a,win,sa)}<hr>${side(b,win,sb)}</div>`).join('');
   const bo = wk.bonus;
-  $("bonus").innerHTML = bo ? `<div class="bonus"><span class="amt">$${bo.prize}</span><div><p><b>Bonus week:</b> ${esc(bo.title)}</p>
-    <p class="who">${bo.winner ? `Won by <b>${esc(bo.winner)}</b>${bo.note?` · ${esc(bo.note)}`:''}` : 'Up for grabs this week'}</p></div></div>` : '';
+  $("bonus").innerHTML = (tbd ? `<p class="note">${esc(po.round)} matchups will be set when the regular season ends. The top 3 in each division qualify.</p>` : '') +
+    (bo ? `<div class="bonus"><span class="amt">$${bo.prize}</span><div><p><b>Bonus week:</b> ${esc(bo.title)}</p>
+    <p class="who">${bo.winner ? `Won by <b>${esc(bo.winner)}</b>${bo.note?` · ${esc(bo.note)}`:''}` : 'Up for grabs this week'}</p></div></div>` : '');
 }
 $("weeks").innerHTML = LEAGUE.weeks.map(w =>
   `<button type="button" id="wk${w.week}" data-w="${w.week}" class="${w.week===cur?'live':''}" aria-pressed="false">Wk ${w.week}</button>`).join('') +
-  `<button type="button" id="wkpo" data-w="po" class="po-btn" aria-pressed="false">Playoffs</button>`;
-$("weeks").addEventListener("click", e => { const b = e.target.closest("button"); if (b) showWeek(b.dataset.w === "po" ? "po" : +b.dataset.w); });
+  LEAGUE.playoffs.map(p => `<button type="button" id="wk${p.week}" data-w="${p.week}" class="po-btn" aria-pressed="false" title="Week ${p.week}">${esc(p.short)}</button>`).join('');
+$("weeks").addEventListener("click", e => { const b = e.target.closest("button"); if (b) showWeek(+b.dataset.w); });
 showWeek(cur);
 
 // payouts
@@ -376,7 +370,7 @@ $("money").innerHTML =
   bonusCard();
 function bonusCard(){
   const bw = LEAGUE.weeks.filter(w => w.bonus).map(w => ({ week:w.week, ...w.bonus }))
-    .concat(LEAGUE.extraBonus || []).sort((a,b) => a.week - b.week);
+    .concat((LEAGUE.playoffs || []).filter(p => p.bonus).map(p => ({ week:p.week, ...p.bonus }))).sort((a,b) => a.week - b.week);
   const rows = bw.map(b => `<li><span class="bw"><span>Week ${b.week} · ${esc(b.title)}</span>
       <small>${b.winner ? `Won by <b>${esc(b.winner)}</b>${b.note?` · ${esc(b.note)}`:''}` : (b.week >= cur ? 'Upcoming' : 'Winner TBD')}</small></span><b>$${b.prize}</b></li>`);
   for (let i = bw.length; i < P.bonusWeeks.count; i++)
