@@ -223,11 +223,11 @@ footer b{color:var(--band-fg);font-family:var(--f-display);font-size:1.3rem;lett
    ===================================================================== */
 const LEAGUE = {
   season: 2026,
-  updated: "Nov 3, 2026",
+  updated: "Nov 14, 2026",
   // Season total points (from the league app) — update weekly
   totalPoints: {
-    "UB":1478.25,"Motley Crew":1428.37,"Let's Ride":1412.30,"Wack Pack":1397.42,"CubHater":1367.09,
-    "Witness GOATness":1352.12,"Jeff's Team":1346.57,"Coiffed Master":1297.17,"One Tua":1196.68,"Jerry's Kidz":1165.77
+    "UB":1660.53,"Let's Ride":1626.32,"Wack Pack":1600.83,"Witness GOATness":1580.66,"Motley Crew":1561.26,
+    "CubHater":1542.10,"Coiffed Master":1515.41,"Jeff's Team":1506.83,"One Tua":1332.04,"Jerry's Kidz":1306.98
   },
   divisions: {
     "Muthas": ["Jeff's Team","Wack Pack","Witness GOATness","Jerry's Kidz","Motley Crew"],
@@ -244,7 +244,7 @@ const LEAGUE = {
     { week:7, bonus:{ title:"Most Points Scored (Starters Only)", prize:50, winner:"Motley Crew", note:"231.74 pts" },
       games:[["Wack Pack","Jeff's Team","Wack Pack",185.27,156.30],["Motley Crew","One Tua","Motley Crew",231.74,176.05],["Let's Ride","Jerry's Kidz","Jerry's Kidz",148.59,162.78],["UB","Witness GOATness","Witness GOATness",149.23,167.07],["CubHater","Coiffed Master","CubHater",207.37,175.86]] },
     { week:8, games:[["One Tua","Wack Pack","Wack Pack",112.97,127.72],["UB","Let's Ride","UB",165.52,163.84],["Jeff's Team","Jerry's Kidz","Jeff's Team",191.05,116.85],["Coiffed Master","Motley Crew","Motley Crew",165.87,213.96],["Witness GOATness","CubHater","CubHater",177.19,185.64]] },
-    { week:9, games:[["One Tua","Witness GOATness"],["Coiffed Master","Let's Ride"],["Jerry's Kidz","UB"],["Motley Crew","Wack Pack"],["Jeff's Team","CubHater"]] },
+    { week:9, games:[["One Tua","Witness GOATness","Witness GOATness",127.96,221.68],["Coiffed Master","Let's Ride","Coiffed Master",189.96,158.84],["Jerry's Kidz","UB","UB",141.21,182.28],["Motley Crew","Wack Pack","Wack Pack",132.89,181.99],["Jeff's Team","CubHater","Jeff's Team",160.26,154.71]] },
     { week:10, games:[["UB","Coiffed Master"],["Let's Ride","One Tua"],["Motley Crew","Jeff's Team"],["Jerry's Kidz","Witness GOATness"],["Wack Pack","CubHater"]] },
     { week:11, bonus:{ title:"Most Kicker Points", prize:50, winner:null }, games:[["CubHater","One Tua"],["Let's Ride","Jerry's Kidz"],["Witness GOATness","Jeff's Team"],["Coiffed Master","Motley Crew"],["Wack Pack","UB"]] },
     { week:12, games:[["Jeff's Team","Motley Crew"],["Wack Pack","Jerry's Kidz"],["CubHater","Let's Ride"],["One Tua","Coiffed Master"],["Witness GOATness","UB"]] },
@@ -324,7 +324,7 @@ $("divs").innerHTML = Object.entries(LEAGUE.divisions).map(([name, teams]) => {
   const hi = Math.max(...Object.values(last));
   const order = Object.keys(tp).sort((a,b) => tp[b]-tp[a]);
   const prizes = LEAGUE.payouts.pools[0].places;
-  $("ptsAsOf").textContent = lw ? "Through Week " + lw.week : "";
+  $("ptsAsOf").textContent = "As of " + LEAGUE.updated;
   $("ptsRows").innerHTML = order.map((t,i) => `<tr class="${i<prizes.length?'paid':''}">
     <td class="team"><span class="seed">${i+1}</span>${esc(t)}${i<prizes.length?`<span class="prize">$${prizes[i]}</span>`:''}${LEAGUE.owners?.[t]?`<span class="own">${esc(LEAGUE.owners[t])}</span>`:''}</td>
     <td class="tot">${tp[t].toFixed(2)}</td>
